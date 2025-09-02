@@ -18,4 +18,22 @@ require_relative "lib/auto_login_module/engine"
 
 after_initialize do
   # Code which should run after Rails has finished booting
+
+  OmniAuth.config.before_request_phase do |env|
+    if !SiteSetting.auto_login_enabled
+      next
+    end
+
+    request = ActionDispatch::Request.new(env)
+    if request.params.key?("silent") && request.params["silent"] == "true"
+      if env['omniauth.strategy'].is_a? OmniAuth::Strategies::OAuth2
+        env['omniauth.strategy'].options[:prompt] = 'none'
+      else
+        # Assume SAML
+        # There is a separate plugin for omniauth SAML that we can't guarantee is installed
+        # env['omniauth.strategy'].options[:isPassive] = 'true'
+        # TODO: figure out how to make changes to SAML request attributes
+      end
+    end
+  end
 end

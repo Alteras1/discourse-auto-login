@@ -3,7 +3,7 @@ en:
     admin:
       site_settings:
         categories:
-          TODO_plugin_name: "Plugin Name"
+          auto_login: "Auto Login"
   js:
-    discourse_plugin_name:
+    auto_login:
       placeholder: placeholder
