@@ -31,8 +31,7 @@ after_initialize do
       else
         # Assume SAML
         # There is a separate plugin for omniauth SAML that we can't guarantee is installed
-        # env['omniauth.strategy'].options[:isPassive] = 'true'
-        # TODO: figure out how to make changes to SAML request attributes
+        env['omniauth.strategy'].options[:passive] = 'true'
       end
     end
   end
