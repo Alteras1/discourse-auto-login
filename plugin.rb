@@ -12,29 +12,94 @@ enabled_site_setting :auto_login_enabled
 
 register_asset "stylesheets/common/index.scss"
 
-module ::AutoLoginModule
+module ::AutoLogin
   PLUGIN_NAME = "discourse-auto-login"
+
+  # see https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+  # immediate_failed is not in the spec but is used by some providers (i.e. Google)
+  OAUTH_PROMPT_NONE_ERRORS = %w[interaction_required login_required account_selection_required consent_required immediate_failed].freeze
 end
 
-require_relative "lib/auto_login_module/engine"
+require_relative "lib/auto_login/engine"
 
 after_initialize do
-  # Code which should run after Rails has finished booting
-
+  existing_omniauth_before_request_phase = OmniAuth.config.before_request_phase
   OmniAuth.config.before_request_phase do |env|
+    existing_omniauth_before_request_phase.call(env) if existing_omniauth_before_request_phase
     if !SiteSetting.auto_login_enabled
       next
     end
 
     request = ActionDispatch::Request.new(env)
     if request.params.key?("silent") && request.params["silent"] == "true"
-      if env['omniauth.strategy'].is_a? OmniAuth::Strategies::OAuth2
-        env['omniauth.strategy'].options[:prompt] = 'none'
+      if env["omniauth.strategy"].is_a? OmniAuth::Strategies::OAuth2
+        env["omniauth.strategy"].options[:prompt] = "none"
       else
         # Assume SAML
-        # There is a separate plugin for omniauth SAML that we can't guarantee is installed
-        env['omniauth.strategy'].options[:passive] = 'true'
+        # There is a separate plugin for omniauth SAML that we can"t guarantee is installed
+        env["omniauth.strategy"].options[:passive] = "true"
       end
     end
   end
+
+  # NOTE: by default omniauth will raise an exception in development mode
+  # To force redirect to /auth/failure even in development mode, set failure_raise_out_environments to []
+  # See discourse/config/initializers/009-omniauth.rb#L11
+
+  class ::AutoLogin::SilentLoginError < StandardError
+  end
+
+  existing_omniauth_on_failure = OmniAuth.config.on_failure
+  OmniAuth.config.on_failure do |env|
+    if !SiteSetting.auto_login_enabled
+      next existing_omniauth_on_failure.call(env) if existing_omniauth_on_failure
+    end
+
+    if env["omniauth.strategy"].is_a? OmniAuth::Strategies::OAuth2
+      if ::AutoLogin::OAUTH_PROMPT_NONE_ERRORS.include?(env["omniauth.error.type"].to_s)
+        env["omniauth.error.type"] = "silent_login_failed"
+        env["omniauth.error"] = ::AutoLogin::SilentLoginError.new("silent_login_failed")
+        next OmniAuth::FailureEndpoint.call(env)
+      end
+    end
+
+    existing_omniauth_on_failure.call(env) if existing_omniauth_on_failure
+  end
+
+  module ::AutoLogin::OmniauthCallbacksControllerExtensions
+    def failure
+      if params[:message] == "silent_login_failed"
+        preferred_origin = request.env["omniauth.origin"]
+
+        if session[:destination_url].present?
+          preferred_origin = session[:destination_url]
+          session.delete(:destination_url)
+        elsif cookies[:destination_url].present?
+          preferred_origin = cookies[:destination_url]
+          cookies.delete(:destination_url)
+        end
+
+        origin = Discourse.base_path("/")
+
+        if preferred_origin.present?
+          parsed =
+            begin
+              URI.parse(preferred_origin)
+            rescue URI::Error
+            end
+
+          if valid_origin?(parsed)
+            origin = "#{parsed.path}"
+            origin << "?#{parsed.query}" if parsed.query
+          end
+        end
+
+        cookies[:no_auto_login] = { value: "true", secure: true, same_site: :none }
+
+        return redirect_to origin
+      end
+      super
+    end
+  end
+  ::Users::OmniauthCallbacksController.prepend(::AutoLogin::OmniauthCallbacksControllerExtensions)
 end
