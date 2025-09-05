@@ -10,6 +10,8 @@
 
 enabled_site_setting :auto_login_enabled
 
+register_asset "stylesheets/common/index.scss"
+
 module ::AutoLoginModule
   PLUGIN_NAME = "discourse-auto-login"
 end

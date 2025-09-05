@@ -2,6 +2,7 @@ import cookie, { removeCookie } from "discourse/lib/cookie";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import DiscourseURL from "discourse/lib/url";
 import { isValidDestinationUrl } from "discourse/lib/utilities";
+import Splash from "../components/splash";
 
 const NO_AUTO_LOGIN_COOKIE = "no_auto_login";
 
@@ -23,6 +24,7 @@ function autoLoginIfNeeded(api) {
 
   const login = api.container.lookup("service:login");
   if (login.isOnlyOneExternalLoginMethod) {
+    api.renderInOutlet("above-main-container", Splash);
     attemptAutoLogin(login);
   }
 }

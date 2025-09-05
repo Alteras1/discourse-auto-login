@@ -1,0 +1,81 @@
+// copied and modified from discourse/app/views/common/_discourse_splash.html.erb
+html:has(#d-splash.auto-login-redirect-loader) {
+  overflow-y: hidden !important;
+
+  background-color: var(--secondary);
+
+  #d-splash {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    z-index: 1001;
+    --dot-color: var(--tertiary);
+    background-color: var(--secondary);
+  }
+
+  #d-splash .preloader-image {
+    --splash-dot-size: max(1vw, 25px);
+    --splash-dot-spacing: calc(var(--splash-dot-size) * 1.5);
+    width: calc((var(--splash-dot-size) + var(--splash-dot-spacing)) * 5);
+    height: 100vh;
+    background-size: cover;
+  }
+
+  @keyframes d-splash-fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .dots {
+    animation-name: d-splash-loader;
+    animation-timing-function: ease-in-out;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+    animation-delay: calc(var(--n) * 0.15s);
+
+    position: absolute;
+    top: calc(50% - var(--splash-dot-size) / 2);
+    left: calc(
+      (50% - var(--splash-dot-size) / 2) +
+        (var(--n) * var(--splash-dot-spacing))
+    );
+    transform-origin: calc(
+        (var(--splash-dot-spacing) * var(--n) * -1) + var(--splash-dot-size) / 2
+      )
+      center;
+
+    width: var(--splash-dot-size);
+    height: var(--splash-dot-size);
+    border-radius: 50%;
+
+    background-color: var(--dot-color);
+    filter: saturate(2) opacity(0.85);
+    opacity: 0;
+  }
+
+  @keyframes d-splash-loader {
+    0% {
+      opacity: 0;
+      transform: scale(1);
+    }
+    45% {
+      opacity: 1;
+      transform: scale(0.7);
+    }
+    65% {
+      opacity: 1;
+      transform: scale(0.7);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+}
