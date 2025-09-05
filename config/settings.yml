@@ -2,3 +2,10 @@ auto_login:
   auto_login_enabled:
     default: false
     client: true
+  auto_login_strategy:
+    default: "redirect"
+    type: enum
+    choices:
+      - redirect
+      - iframe
+    client: true

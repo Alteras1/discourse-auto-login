@@ -1,1 +1,7 @@
 en:
+  site_settings:
+    auto_login_strategy: >
+      'redirect' will redirect the user to the IdP. 'iframe' will load the IdP login in a hidden iframe.
+      If using 'iframe', ensure your IdP supports being loaded in an iframe and CORS is configured correctly (if applicable).
+      Modern browsers may block third-party cookies in iframes, which can prevent this from working. 'iframe' works
+      best when the Discourse and IdP are on the same root domain (e.g. discourse.example.com and sso.example.com).
