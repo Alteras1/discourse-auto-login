@@ -5,3 +5,6 @@ en:
       If using 'iframe', ensure your IdP supports being loaded in an iframe and CORS is configured correctly (if applicable).
       Modern browsers may block third-party cookies in iframes, which can prevent this from working. 'iframe' works
       best when the Discourse and IdP are on the same root domain (e.g. discourse.example.com and sso.example.com).
+    auto_login_days_cooldown_after_logout: >
+      Number of days to prevent auto-login after a user logs out. This prevents users from being
+      automatically logged back in immediately after they log out. Minimum is 1 day, maximum is 365 days.

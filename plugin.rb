@@ -36,7 +36,7 @@ after_initialize do
         env["omniauth.strategy"].options[:prompt] = "none"
       else
         # Assume SAML
-        # There is a separate plugin for omniauth SAML that we can"t guarantee is installed
+        # There is a separate plugin for omniauth SAML that we can't guarantee is installed
         env["omniauth.strategy"].options[:passive] = "true"
       end
     end
@@ -94,7 +94,7 @@ after_initialize do
           end
         end
 
-        cookies[:no_auto_login] = { value: "true", secure: true, same_site: :none }
+        cookies[:no_auto_login] = { value: "1" }
 
         return redirect_to origin
       end
@@ -102,4 +102,17 @@ after_initialize do
     end
   end
   ::Users::OmniauthCallbacksController.prepend(::AutoLogin::OmniauthCallbacksControllerExtensions)
+
+  module ::AutoLogin::SessionControllerExtensions
+    def destroy
+      # When the user manually logs out, disable auto-login for them for a year.
+      # Assumes the user intended to stay logged out.
+      # If they log back in manually, the cookie is cleared by JS.
+      if SiteSetting.auto_login_enabled
+        cookies[:no_auto_login] = { value: "1", expires: SiteSetting.auto_login_days_cooldown_after_logout.days.from_now }
+      end
+      super
+    end
+  end
+  ::SessionController.prepend(::AutoLogin::SessionControllerExtensions)
 end

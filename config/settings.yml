@@ -9,3 +9,9 @@ auto_login:
       - redirect
       - iframe
     client: true
+  auto_login_days_cooldown_after_logout:
+    default: true
+    client: true
+    default: 30
+    min: 1
+    max: 365
