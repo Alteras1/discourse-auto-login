@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-AutoLoginModule::Engine.routes.draw do
-  get "/examples" => "examples#index"
+AutoLogin::Engine.routes.draw do
+  # get "/redirect" => "auto_login#redirect_to_provider"
   # define routes here
 end
 
-Discourse::Application.routes.draw { mount ::AutoLoginModule::Engine, at: "my-plugin" }
+Discourse::Application.routes.draw { mount ::AutoLogin::Engine, at: "auto-login" }
