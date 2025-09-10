@@ -1,10 +1,10 @@
 // copied and modified from discourse/app/views/common/_discourse_splash.html.erb
 html:has(#d-splash.auto-login-redirect-loader) {
   overflow-y: hidden !important;
-
   background-color: var(--secondary);
 
   #d-splash {
+    --dot-color: var(--tertiary);
     display: grid;
     place-items: center;
     position: absolute;
@@ -12,7 +12,6 @@ html:has(#d-splash.auto-login-redirect-loader) {
     top: 0;
     width: 100vw;
     z-index: 1001;
-    --dot-color: var(--tertiary);
     background-color: var(--secondary);
   }
 
@@ -28,6 +27,7 @@ html:has(#d-splash.auto-login-redirect-loader) {
     0% {
       opacity: 0;
     }
+
     100% {
       opacity: 1;
     }
@@ -39,7 +39,6 @@ html:has(#d-splash.auto-login-redirect-loader) {
     animation-duration: 3s;
     animation-iteration-count: infinite;
     animation-delay: calc(var(--n) * 0.15s);
-
     position: absolute;
     top: calc(50% - var(--splash-dot-size) / 2);
     left: calc(
@@ -50,11 +49,9 @@ html:has(#d-splash.auto-login-redirect-loader) {
         (var(--splash-dot-spacing) * var(--n) * -1) + var(--splash-dot-size) / 2
       )
       center;
-
     width: var(--splash-dot-size);
     height: var(--splash-dot-size);
     border-radius: 50%;
-
     background-color: var(--dot-color);
     filter: saturate(2) opacity(0.85);
     opacity: 0;
@@ -65,14 +62,17 @@ html:has(#d-splash.auto-login-redirect-loader) {
       opacity: 0;
       transform: scale(1);
     }
+
     45% {
       opacity: 1;
       transform: scale(0.7);
     }
+
     65% {
       opacity: 1;
       transform: scale(0.7);
     }
+
     100% {
       opacity: 0;
       transform: scale(1);
