@@ -43,6 +43,9 @@ class ForcedLogoutCleanup {
 
   @bind
   preventAutoLogin() {
+    if (!this.siteSettings.auto_login_enabled) {
+      return;
+    }
     cookie(NO_AUTO_LOGIN_COOKIE, "1", {
       expires: moment()
         .add(this.siteSettings.auto_login_days_cooldown_after_logout, "d")
