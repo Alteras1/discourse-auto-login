@@ -16,13 +16,15 @@ module("Auto Login | Unit | auto login initialization", function (hooks) {
     this.siteSettings = getOwner(this).lookup("service:site-settings");
     this.siteSettings.auto_login_enabled = true;
     this.siteSettings.enable_local_logins = false;
+    this.siteSettings.auto_login_strategy = "redirect";
   });
 
   hooks.afterEach(function () {
     removeCookie(NO_AUTO_LOGIN_COOKIE);
   });
 
-  test("attempts auto login when no user and no cookie", async function (assert) {
+  test("attempts auto login when no user and no cookie via redirect", async function (assert) {
+    this.siteSettings.auto_login_strategy = "redirect";
     let called = false;
     let args = null;
     const loginService = getOwner(this).lookup("service:login");
@@ -52,6 +54,7 @@ module("Auto Login | Unit | auto login initialization", function (hooks) {
   });
 
   test("does not auto login if no single external login method", async function (assert) {
+    this.siteSettings.auto_login_strategy = "redirect";
     let called = false;
     const loginService = getOwner(this).lookup("service:login");
     sinon.stub(loginService, "externalLoginMethods").get(() => [
@@ -81,6 +84,7 @@ module("Auto Login | Unit | auto login initialization", function (hooks) {
 
   test("does not auto login if local logins enabled", async function (assert) {
     this.siteSettings.enable_local_logins = true;
+    this.siteSettings.auto_login_strategy = "redirect";
 
     let called = false;
     const loginService = getOwner(this).lookup("service:login");
@@ -123,5 +127,34 @@ module("Auto Login | Unit | auto login initialization", function (hooks) {
       called,
       "Auto login should not be attempted when no_auto_login cookie present"
     );
+  });
+
+  test("attempts auto login when no user and no cookie via iframe", async function (assert) {
+    this.siteSettings.auto_login_strategy = "iframe";
+    let called = false;
+    const loginService = getOwner(this).lookup("service:login");
+    sinon.stub(loginService, "externalLoginMethods").get(() => [
+      {
+        name: "external",
+        doLogin() {
+          called = true;
+        },
+      },
+    ]);
+    sinon.stub(loginService, "isOnlyOneExternalLoginMethod").get(() => true);
+    removeCookie(NO_AUTO_LOGIN_COOKIE);
+
+    autoLoginInitializer.initialize(getOwner(this));
+
+    assert.false(
+      called,
+      "Auto login should not be attempted when iframe strategy is used"
+    );
+    assert.ok(
+      document.getElementById("auto-login-iframe"),
+      "iframe should be added to the DOM"
+    );
+
+    // unable to test the postMessage flow in this unit test as it requires window.location.reload()
   });
 });
