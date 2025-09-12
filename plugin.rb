@@ -18,6 +18,10 @@ module ::AutoLogin
   # see https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
   # immediate_failed is not in the spec but is used by some providers (i.e. Google)
   OAUTH_PROMPT_NONE_ERRORS = %w[interaction_required login_required account_selection_required consent_required immediate_failed].freeze
+
+  def self.saml_enabled?
+    defined?(OmniAuth::Strategies::SAML) && SiteSetting.saml_enabled
+  end
 end
 
 require_relative "lib/auto_login/engine"
@@ -34,8 +38,7 @@ after_initialize do
     if request.params.key?("silent") && request.params["silent"] == "true"
       if env["omniauth.strategy"].is_a? OmniAuth::Strategies::OAuth2
         env["omniauth.strategy"].options[:prompt] = "none"
-      else
-        # Assume SAML
+      elsif ::AutoLogin.saml_enabled? && env["omniauth.strategy"].is_a?(OmniAuth::Strategies::SAML)
         # There is a separate plugin for omniauth SAML that we can't guarantee is installed
         env["omniauth.strategy"].options[:passive] = "true"
       end
@@ -57,6 +60,14 @@ after_initialize do
 
     if env["omniauth.strategy"].is_a? OmniAuth::Strategies::OAuth2
       if ::AutoLogin::OAUTH_PROMPT_NONE_ERRORS.include?(env["omniauth.error.type"].to_s)
+        env["omniauth.error.type"] = "silent_login_failed"
+        env["omniauth.error"] = ::AutoLogin::SilentLoginError.new("silent_login_failed")
+        next OmniAuth::FailureEndpoint.call(env)
+      end
+    elsif ::AutoLogin.saml_enabled? && env["omniauth.strategy"].is_a?(OmniAuth::Strategies::SAML)
+      # NoPassive is part of SAML2.0 spec
+      # https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-samlpr/96b92662-9bf7-4910-ab16-e1c28bce962b
+      if env["omniauth.error"].message.include? "NoPassive"
         env["omniauth.error.type"] = "silent_login_failed"
         env["omniauth.error"] = ::AutoLogin::SilentLoginError.new("silent_login_failed")
         next OmniAuth::FailureEndpoint.call(env)
