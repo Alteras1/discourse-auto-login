@@ -122,4 +122,47 @@ describe "Auto Login controller extensions of OmniauthCallbacksController", type
       expect(cookies[:no_auto_login]).to eq("1")
     end
   end
+
+  describe "handles silent login SAML failures" do
+    before do
+      SiteSetting.saml_enabled = true
+      SiteSetting.auto_login_enabled = true
+    end
+
+    after do
+      SiteSetting.saml_enabled = false
+      OmniAuth.config.test_mode = false
+    end
+
+    let(:settings_double) do
+      instance_double(OneLogin::RubySaml::Settings, idp_cert_fingerprint: "AB:CD:EF:12:34:56")
+    end
+
+    it "should handle NoPassive error " do
+      SiteSetting.saml_cert_fingerprint = "AB:CD:EF:12:34:56"
+      # Simulate a SAML response with NoPassive error
+      saml_response = Base64.encode64(
+          <<~XML,
+            <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+              xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+              Destination="http://localhost:3000/auth/saml/callback"
+              ID="pfxea519e2c"
+              Version="2.0"
+              >
+              <saml:Issuer>http://localhost:8080/realms/myrealm</saml:Issuer>
+              <samlp:Status>
+                <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Responder">
+                  <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:NoPassive" />
+                </samlp:StatusCode>
+              </samlp:Status>
+            </samlp:Response>
+          XML
+        )
+
+      post "/auth/saml/callback", params: { "SAMLResponse" => saml_response, "SameSite" => "1" }
+      # follow_redirect!
+      expect(response.status).to eq(302)
+      expect(response.location).to include("/auth/failure?message=silent_login_failed")
+    end
+  end
 end
