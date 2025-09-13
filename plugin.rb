@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 # name: discourse-auto-login
-# about: TODO
+# about: Automatically log users in via SSO if they have an active session at the provider
 # meta_topic_id: TODO
-# version: 0.0.1
+# version: 1.0.0
 # authors: Alteras1
-# url: TODO
+# url: https://github.com/Alteras1/discourse-auto-login
 # required_version: 2.7.0
 
 enabled_site_setting :auto_login_enabled
