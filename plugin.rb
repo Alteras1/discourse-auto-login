@@ -24,8 +24,6 @@ module ::AutoLogin
   end
 end
 
-require_relative "lib/auto_login/engine"
-
 after_initialize do
   existing_omniauth_before_request_phase = OmniAuth.config.before_request_phase
   OmniAuth.config.before_request_phase do |env|
