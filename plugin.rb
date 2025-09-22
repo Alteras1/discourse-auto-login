@@ -43,10 +43,6 @@ after_initialize do
     end
   end
 
-  # NOTE: by default omniauth will raise an exception in development mode
-  # To force redirect to /auth/failure even in development mode, set failure_raise_out_environments to []
-  # See discourse/config/initializers/009-omniauth.rb#L11
-
   class ::AutoLogin::SilentLoginError < StandardError
   end
 
