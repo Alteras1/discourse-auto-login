@@ -100,6 +100,4 @@ The initial steps of the auto login are performed by the JS code, while the para
 
 The plugin follows specs for handling `prompt=none` and `IsPassive` related errors in the omniauth `on_failure` hook, but external IdPs may employ custom errors (such as Google using `immediate_failed`). Modifications in `plugin.rb` may be required.
 
-**NOTE**: By default omniauth will raise an exception for SSO failures in development mode. To force redirects to /auth/failure even in development mode as the plugin intended, set `failure_raise_out_environments` to `[]`. See discourse/config/initializers/009-omniauth.rb#L11
-
 Authentication in general currently relies heavily on the usage of cookies, which may be blocked in certain browser instances such as Google Chrome Incognito mode. Take care when testing.

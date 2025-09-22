@@ -3,7 +3,7 @@
 # name: discourse-auto-login
 # about: Automatically log users in via SSO if they have an active session at the provider
 # meta_topic_id: TODO
-# version: 1.0.0
+# version: 1.0.1
 # authors: Alteras1
 # url: https://github.com/Alteras1/discourse-auto-login
 # required_version: 2.7.0
@@ -60,7 +60,7 @@ after_initialize do
       if ::AutoLogin::OAUTH_PROMPT_NONE_ERRORS.include?(env["omniauth.error.type"].to_s)
         env["omniauth.error.type"] = "silent_login_failed"
         env["omniauth.error"] = ::AutoLogin::SilentLoginError.new("silent_login_failed")
-        next OmniAuth::FailureEndpoint.call(env)
+        next OmniAuth::FailureEndpoint.new(env).redirect_to_failure
       end
     elsif ::AutoLogin.saml_enabled? && env["omniauth.strategy"].is_a?(OmniAuth::Strategies::SAML)
       # NoPassive is part of SAML2.0 spec
@@ -68,7 +68,7 @@ after_initialize do
       if env["omniauth.error"].message.include? "NoPassive"
         env["omniauth.error.type"] = "silent_login_failed"
         env["omniauth.error"] = ::AutoLogin::SilentLoginError.new("silent_login_failed")
-        next OmniAuth::FailureEndpoint.call(env)
+        next OmniAuth::FailureEndpoint.new(env).redirect_to_failure
       end
     end
 
